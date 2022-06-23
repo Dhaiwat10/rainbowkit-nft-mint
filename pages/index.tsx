@@ -1,56 +1,44 @@
-import {
-  Container,
-  Heading,
-  Link,
-  ListItem,
-  UnorderedList,
-} from '@chakra-ui/react';
+import { Button, Container, Image, Skeleton } from '@chakra-ui/react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ethers } from 'ethers';
+import { useEffect, useState } from 'react';
+import {
+  useAccount,
+  useContract,
+  useContractRead,
+  useContractWrite,
+} from 'wagmi';
+import abiFile from '../abiFile.json';
 
 export default function Home() {
+  const contractConfig = {
+    addressOrName: '0xcbac287a142eca78293a3659e901d25bd17deff8',
+    contractInterface: abiFile.abi,
+  };
+  const contract = useContract(contractConfig);
+  const { data: tokenURI } = useContractRead(
+    contractConfig,
+    'COMMON_TOKEN_URI'
+  );
+  const { writeAsync: mint } = useContractWrite(contractConfig, 'mint');
+  const { data: accountData } = useAccount();
+
+  const onMintClick = async () => {
+    const tx = await mint({
+      args: [accountData?.address, { value: ethers.utils.parseEther('0.001') }],
+    });
+  };
+
   return (
     <Container paddingY='10'>
       <ConnectButton />
+      <Image
+        src={tokenURI as unknown as string}
+        dropShadow='xl'
+        width='200px'
+      />
 
-      {/* Feel free to delete this Info section before getting started */}
-      <Info />
+      <Button onClick={onMintClick}>Mint</Button>
     </Container>
   );
 }
-
-// Feel free to delete this before getting started
-const Info = () => {
-  return (
-    <>
-      <Heading mt='10'>gm ☀️</Heading>
-
-      <UnorderedList mt='4'>
-        <ListItem>
-          <Link isExternal={true} href='https://nextjs.org/'>
-            🔼 Next.js
-          </Link>
-        </ListItem>
-        <ListItem>
-          <Link isExternal={true} href='https://chakra-ui.com/'>
-            ☸️ Chakra UI
-          </Link>
-        </ListItem>
-        <ListItem>
-          <Link isExternal={true} href='https://rainbowkit.com'>
-            🌈 Rainbowkit
-          </Link>
-        </ListItem>
-        <ListItem>
-          <Link isExternal={true} href='https://wagmi.sh'>
-            ❤️‍🔥 wagmi
-          </Link>
-        </ListItem>
-        <ListItem>
-          <Link isExternal={true} href='https://www.ankr.com/protocol/'>
-            ⚓️ Ankr RPC
-          </Link>
-        </ListItem>
-      </UnorderedList>
-    </>
-  );
-};
